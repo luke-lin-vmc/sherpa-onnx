@@ -17,6 +17,7 @@ jobs:
       matrix:
         os: [macos-latest]
         python-version: ["3.10"]
+        model_version: [v1,, v2]
 
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +35,9 @@ jobs:
       - name: Run
         shell: bash
         run: |
-          d=sherpa-onnx-reverb-diarization-v1
+          v=${{ matrix.model_version }}
+          export VERSION=$v
+          d=sherpa-onnx-reverb-diarization-$v
           src=$PWD/$d
           mkdir -p $src
 
@@ -72,7 +75,10 @@ jobs:
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
-            d=sherpa-onnx-reverb-diarization-v1
+            v=${{ matrix.model_version }}
+            export VERSION=$v
+
+            d=sherpa-onnx-reverb-diarization-$v
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
             git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface

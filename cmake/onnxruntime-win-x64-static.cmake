@@ -65,6 +65,8 @@ file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.lib")
 set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
 
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
+message(STATUS "Copy ${onnxruntime_lib_files} to ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE}")
+file(COPY ${onnxruntime_lib_files} DESTINATION ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 if(SHERPA_ONNX_ENABLE_PYTHON)
   install(FILES ${onnxruntime_lib_files} DESTINATION ..)
 else()

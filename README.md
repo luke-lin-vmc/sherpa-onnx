@@ -1,10 +1,17 @@
-### Purpose
+# Code based
+https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2
+
+# Purpose
+1. Fix settings of MFC example
+2. Make it easilier to switch debug/release
+3. Upgrade portaudio, make loopback possible
 
 ## Previouse Work Flow
 https://k2-fsa.github.io/sherpa/onnx/install/windows.html#bit-windows-x64
+
 https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2/mfc-examples
 
-# Git clone
+#### Git clone
 ```
 git clone https://github.com/k2-fsa/sherpa-onnx
 cd sherpa-onnx
@@ -12,7 +19,7 @@ mkdir build
 cd build
 ```
 
-# Build Release
+#### Build Release
 ```
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . --config Release
@@ -21,7 +28,7 @@ msbuild ./mfc-examples.sln /property:Configuration=Release /property:Platform=x6
 (or VC to open mfc-examples.sln, then build Release solution
 ```
 
-# Build Debug
+#### Build Debug
 ```
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build . --config Debug
@@ -30,21 +37,28 @@ msbuild ./mfc-examples.sln /property:Configuration=Debug /property:Platform=x64
 (or VC to open mfc-examples.sln, then build Debug solution
 ```
 
+### Link Error
 If you skip belows steps, you will get LINK error when building mfc-examples.sln debug
 ```
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build . --config Debug
 ```
 
-This is becasue both Release and Debug build use the same "onnxruntime.lib"
+This is becasue below two script put debug and release "onnxruntime.lib" in the same location
+
+  https://github.com/luke-lin-vmc/sherpa-onnx/blob/main/cmake/onnxruntime-win-x86-static-debug.cmake#L68
+
+  https://github.com/luke-lin-vmc/sherpa-onnx/blob/main/cmake/onnxruntime-win-x86-static.cmake#L63
+
+The LINK error happens if you build Debug but link to Release "onnxruntime.lib"
+
+### Solution
+Modify the cmake script, copy debug "onnxruntime.lib" to lib/Debug, and copy release "onnxruntime.lib" to lib/Release
 
 
 
-### Code based
-https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2
 
-
-### --- Original README.md ---
+## ------------- Original README.md -------------------
 
 ### Supported functions
 

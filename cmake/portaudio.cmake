@@ -1,19 +1,18 @@
 function(download_portaudio)
   include(FetchContent)
 
-  set(portaudio_URL  "http://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz")
-  set(portaudio_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/pa_stable_v190700_20210406.tgz")
-  set(portaudio_HASH "SHA256=47efbf42c77c19a05d22e627d42873e991ec0c1357219c0d74ce6a2948cb2def")
+  # Get the source code from commit 35e35d4 (3/15/2025). https://github.com/PortAudio/portaudio/commit/35e35d46caa07024d3623f57ae7beaf21282c441
+  set(portaudio_URL  "https://github.com/PortAudio/portaudio/archive/35e35d46caa07024d3623f57ae7beaf21282c441.zip")
+  set(portaudio_HASH "SHA256=0953911f0f25a423cdbc9a38ed77d629421a3012187a2cd435c3e0f68699132f")
 
   # If you don't have access to the Internet, please download it to your
   # local drive and modify the following line according to your needs.
   set(possible_file_locations
-    $ENV{HOME}/Downloads/pa_stable_v190700_20210406.tgz
-    $ENV{HOME}/asr/pa_stable_v190700_20210406.tgz
-    ${CMAKE_SOURCE_DIR}/pa_stable_v190700_20210406.tgz
-    ${CMAKE_BINARY_DIR}/pa_stable_v190700_20210406.tgz
-    /tmp/pa_stable_v190700_20210406.tgz
-    /star-fj/fangjun/download/github/pa_stable_v190700_20210406.tgz
+    $ENV{HOME}/Downloads/35e35d46caa07024d3623f57ae7beaf21282c441.zip
+    $ENV{HOME}/asr/35e35d46caa07024d3623f57ae7beaf21282c441.zip
+    ${CMAKE_SOURCE_DIR}/35e35d46caa07024d3623f57ae7beaf21282c441.zip
+    ${CMAKE_BINARY_DIR}/35e35d46caa07024d3623f57ae7beaf21282c441.zip
+    /tmp/35e35d46caa07024d3623f57ae7beaf21282c441.zip
   )
 
   foreach(f IN LISTS possible_file_locations)
@@ -27,8 +26,7 @@ function(download_portaudio)
   endforeach()
 
   # Always use static build
-  set(PA_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-  set(PA_BUILD_STATIC ON CACHE BOOL "" FORCE)
+  set(DBUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
   FetchContent_Declare(portaudio
     URL
@@ -51,14 +49,14 @@ function(download_portaudio)
 
   add_subdirectory(${portaudio_SOURCE_DIR} ${portaudio_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-  set_target_properties(portaudio_static PROPERTIES OUTPUT_NAME "sherpa-onnx-portaudio_static")
+  set_target_properties(portaudio PROPERTIES OUTPUT_NAME "sherpa-onnx-portaudio_static")
   if(NOT WIN32)
-    target_compile_options(portaudio_static PRIVATE "-Wno-deprecated-declarations")
+    target_compile_options(portaudio PRIVATE "-Wno-deprecated-declarations")
   endif()
 
   if(NOT BUILD_SHARED_LIBS AND SHERPA_ONNX_ENABLE_BINARY)
     install(TARGETS
-      portaudio_static
+      portaudio
     DESTINATION lib)
   endif()
 

@@ -1,60 +1,56 @@
-# Code based
-https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2
+## Code base: Sherpa-Onnx v1.11.2
+* https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2
 
-# Purpose
-1. Fix settings of MFC example
-2. Make it easilier to switch debug/release
-3. Upgrade portaudio, make loopback possible
+## Purpose
+1. Fix setting errors of MFC example
+2. Make it easilier to switch building debug/release
+3. Upgrade portaudio, enable loopback recording
 
-## Previouse Work Flow
-https://k2-fsa.github.io/sherpa/onnx/install/windows.html#bit-windows-x64
-
-https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2/mfc-examples
-
-#### Git clone
+## Work Flow
+### Reference
+* https://k2-fsa.github.io/sherpa/onnx/install/windows.html#bit-windows-x64
+* https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2/mfc-examples
+### Git clone
 ```
-git clone https://github.com/k2-fsa/sherpa-onnx
+git clone https://github.com/luke-lin-vmc/sherpa-onnx
 cd sherpa-onnx
 mkdir build
 cd build
 ```
-
-#### Build Release
+### Build Debug Libs and Examples
+```
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build . --config Debug
+```
+### Build Release Libs and Examples
 ```
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . --config Release
+```
+### Build Release MFC example
+```
 cd ..\mfc-examples
 msbuild ./mfc-examples.sln /property:Configuration=Release /property:Platform=x64
 (or VC to open mfc-examples.sln, then build Release solution
 ```
-
-#### Build Debug
+### Build Debug MFC example
 ```
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-cmake --build . --config Debug
 cd ..\mfc-examples
 msbuild ./mfc-examples.sln /property:Configuration=Debug /property:Platform=x64
 (or VC to open mfc-examples.sln, then build Debug solution
 ```
 
-### Link Error
-If you skip belows steps, you will get LINK error when building mfc-examples.sln debug
-```
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-cmake --build . --config Debug
-```
-
-This is becasue below two script put debug and release "onnxruntime.lib" in the same location
-
-  https://github.com/luke-lin-vmc/sherpa-onnx/blob/main/cmake/onnxruntime-win-x86-static-debug.cmake#L68
-
-  https://github.com/luke-lin-vmc/sherpa-onnx/blob/main/cmake/onnxruntime-win-x86-static.cmake#L63
+### Improvement
+#### Issue:
+With the original repo, you will get `Link Error` if you "Build Debug MFC example" after "Build Release Libs and Examples". This is becasue Debug build needs debug "onnxruntime.lib". However, below two script put debug and release "onnxruntime.lib" in the same location
+* https://github.com/luke-lin-vmc/sherpa-onnx/blob/main/cmake/onnxruntime-win-x86-static-debug.cmake#L68
+* https://github.com/luke-lin-vmc/sherpa-onnx/blob/main/cmake/onnxruntime-win-x86-static.cmake#L63
 
 The LINK error happens if you build Debug but link to Release "onnxruntime.lib"
 
-### Solution
-Modify the cmake script, copy debug "onnxruntime.lib" to lib/Debug, and copy release "onnxruntime.lib" to lib/Release
-
+#### Solution:
+* Modify the cmake script, copy debug "onnxruntime.lib" to lib/Debug, and copy release "onnxruntime.lib" to lib/Release.
+* Make MFC example to link differnet "onnxruntime.lib" per the configuration (Debug/Release)
 
 
 

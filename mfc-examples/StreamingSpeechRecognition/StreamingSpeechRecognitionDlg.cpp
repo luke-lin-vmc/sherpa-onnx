@@ -55,12 +55,15 @@ void CStreamingSpeechRecognitionDlg::DoDataExchange(CDataExchange *pDX) {
   CDialogEx::DoDataExchange(pDX);
   DDX_Control(pDX, IDOK, my_btn_);
   DDX_Control(pDX, IDC_EDIT1, my_text_);
+  DDX_Control(pDX, IDC_COMBO1, my_combo_devices_);
 }
 
 BEGIN_MESSAGE_MAP(CStreamingSpeechRecognitionDlg, CDialogEx)
 ON_WM_PAINT()
 ON_WM_QUERYDRAGICON()
 ON_BN_CLICKED(IDOK, &CStreamingSpeechRecognitionDlg::OnBnClickedOk)
+ON_CBN_SELCHANGE(IDC_COMBO1,
+                 &CStreamingSpeechRecognitionDlg::OnCbnSelchangeCombo1)
 END_MESSAGE_MAP()
 
 // CStreamingSpeechRecognitionDlg message handlers
@@ -123,7 +126,7 @@ static int32_t RecordCallback(const void *input_buffer,
 
   auto stream = dlg->stream_;
   if (stream) {
-    SherpaOnnxOnlineStreamAcceptWaveform(stream, 16000, reinterpret_cast<const float *>(input_buffer),
+    SherpaOnnxOnlineStreamAcceptWaveform(stream, 48000, reinterpret_cast<const float *>(input_buffer),
                    frames_per_buffer);
   }
 
@@ -152,14 +155,15 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
 
     stream_ = SherpaOnnxCreateOnlineStream(recognizer_);
 
+    AppendLineToMultilineEditCtrl(std::string("Selected device ") + Pa_GetDeviceInfo(pa_device_)->name);
     PaStreamParameters param;
-    param.device = Pa_GetDefaultInputDevice();
+    param.device = pa_device_;
     const PaDeviceInfo *info = Pa_GetDeviceInfo(param.device);
     param.channelCount = 1;
     param.sampleFormat = paFloat32;
     param.suggestedLatency = info->defaultLowInputLatency;
     param.hostApiSpecificStreamInfo = nullptr;
-    float sample_rate = 16000;
+    float sample_rate = 48000;
     pa_stream_ = nullptr;
     PaError err =
         Pa_OpenStream(&pa_stream_, &param, nullptr, /* &outputParameters, */
@@ -214,19 +218,46 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
 }
 
 void CStreamingSpeechRecognitionDlg::InitMicrophone() {
-  int default_device = Pa_GetDefaultInputDevice();
-  int device_count = Pa_GetDeviceCount();
-  if (default_device == paNoDevice) {
-    // CString str;
-    // str.Format(_T("No default input device found!"));
-    // AfxMessageBox(str, MB_OK | MB_ICONSTOP);
-    // exit(-1);
+  int numHostApis = Pa_GetHostApiCount();
+  int numDevices = Pa_GetDeviceCount();
+
+  // Find default WASAPI input device
+  idx_to_pa_device.clear();
+  int defaultWasapiInputDevice = -1;
+  for (int i = 0; i < numHostApis; ++i) {
+    const PaHostApiInfo *apiInfo = Pa_GetHostApiInfo(i);
+    if (apiInfo->type == PaHostApiTypeId::paWASAPI) {
+      if (apiInfo->defaultInputDevice != paNoDevice) {
+        defaultWasapiInputDevice = apiInfo->defaultInputDevice;
+        idx_to_pa_device[0] = defaultWasapiInputDevice; // item 0 is the default device
+        my_combo_devices_.AddString(_T("Default"));
+      }
+    }
+  }
+
+  if (defaultWasapiInputDevice == -1) {
     AppendLineToMultilineEditCtrl("No default input device found!");
     my_btn_.EnableWindow(FALSE);
     return;
   }
-  AppendLineToMultilineEditCtrl(std::string("Selected device ") +
-                                Pa_GetDeviceInfo(default_device)->name);
+
+   // List all WASAPI input devices
+  int numWasapiInputDevices = 1; // item 0 is already occupied by default device
+  for (int i = 0; i < numDevices; ++i) {
+    const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
+    const PaHostApiInfo *apiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
+    if (apiInfo->type == PaHostApiTypeId::paWASAPI) {
+      if (deviceInfo->maxInputChannels > 0) {
+        idx_to_pa_device[numWasapiInputDevices] = i;
+        numWasapiInputDevices++;
+        my_combo_devices_.AddString(CString(deviceInfo->name));
+      }
+    }
+  }
+
+  // Select item 0 as the default device
+  my_combo_devices_.SetCurSel(0);
+  pa_device_ = idx_to_pa_device[my_combo_devices_.GetCurSel()];
 }
 
 bool CStreamingSpeechRecognitionDlg::Exists(const std::string &filename) {
@@ -547,4 +578,9 @@ int CStreamingSpeechRecognitionDlg::RunThread() {
   }
 
   return 0;
+}
+
+void CStreamingSpeechRecognitionDlg::OnCbnSelchangeCombo1() {
+  // TODO: Add your control notification handler code here
+  pa_device_ = idx_to_pa_device[my_combo_devices_.GetCurSel()];
 }

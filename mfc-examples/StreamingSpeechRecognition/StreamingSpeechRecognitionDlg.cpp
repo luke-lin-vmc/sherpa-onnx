@@ -217,6 +217,20 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
   }
 }
 
+CString Utf8ToCString(const char *utf8Str) {
+  if (!utf8Str) return _T("");
+
+  int len = MultiByteToWideChar(CP_UTF8, 0, utf8Str, -1, NULL, 0);
+  if (len == 0) return _T("");
+
+  CStringW wideName;
+  MultiByteToWideChar(CP_UTF8, 0, utf8Str, -1, wideName.GetBuffer(len), len);
+  wideName.ReleaseBuffer();
+
+  // Convert wide to CString (TCHAR), which is UTF-16 in Unicode builds
+  return CString(wideName);
+}
+
 void CStreamingSpeechRecognitionDlg::InitMicrophone() {
   int numHostApis = Pa_GetHostApiCount();
   int numDevices = Pa_GetDeviceCount();
@@ -250,7 +264,7 @@ void CStreamingSpeechRecognitionDlg::InitMicrophone() {
       if (deviceInfo->maxInputChannels > 0) {
         idx_to_pa_device[numWasapiInputDevices] = i;
         numWasapiInputDevices++;
-        my_combo_devices_.AddString(CString(deviceInfo->name));
+        my_combo_devices_.AddString(Utf8ToCString(deviceInfo->name));
       }
     }
   }

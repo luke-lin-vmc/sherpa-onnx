@@ -5,6 +5,7 @@
 #pragma once
 
 #include <string>
+#include <map>
 
 #include "portaudio.h"
 #include "sherpa-onnx/c-api/c-api.h"
@@ -47,10 +48,13 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
 
   const SherpaOnnxOnlineRecognizer *recognizer_ = nullptr;
 
+  int pa_device_ = -1;
+  std::map<int, int> idx_to_pa_device;
   PaStream *pa_stream_ = nullptr;
   RecognizerThread *thread_ = nullptr;
   CButton my_btn_;
   CEdit my_text_;
+  CComboBox my_combo_devices_;
 
  public:
   bool started_ = false;
@@ -59,6 +63,7 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
  public:
   int RunThread();
   afx_msg void OnBnClickedOk();
+  afx_msg void OnCbnSelchangeCombo1();
 
  private:
   void AppendTextToEditCtrl(const std::string &s);

@@ -235,35 +235,68 @@ void CStreamingSpeechRecognitionDlg::InitMicrophone() {
   int numHostApis = Pa_GetHostApiCount();
   int numDevices = Pa_GetDeviceCount();
 
-  // Find default WASAPI input device
+  // Find default WASAPI input/output device
   idx_to_pa_device.clear();
   int defaultWasapiInputDevice = -1;
+  int defaultWasapiOutputDevice = -1;
   for (int i = 0; i < numHostApis; ++i) {
     const PaHostApiInfo *apiInfo = Pa_GetHostApiInfo(i);
     if (apiInfo->type == PaHostApiTypeId::paWASAPI) {
       if (apiInfo->defaultInputDevice != paNoDevice) {
         defaultWasapiInputDevice = apiInfo->defaultInputDevice;
-        idx_to_pa_device[0] = defaultWasapiInputDevice; // item 0 is the default device
-        my_combo_devices_.AddString(_T("Default"));
+        defaultWasapiOutputDevice = apiInfo->defaultOutputDevice;
+        break;
       }
     }
   }
-
   if (defaultWasapiInputDevice == -1) {
     AppendLineToMultilineEditCtrl("No default input device found!");
     my_btn_.EnableWindow(FALSE);
     return;
   }
+  if (defaultWasapiOutputDevice == -1) {
+    AppendLineToMultilineEditCtrl("No default output device found!");
+    my_btn_.EnableWindow(FALSE);
+    return;
+  }
 
-   // List all WASAPI input devices
-  int numWasapiInputDevices = 1; // item 0 is already occupied by default device
+  // Find default WASAPI loopback device i.e. default output device with postfix "[Loopback]" 
+  int defaultWasapiLoopbackDevice = -1;
+  CString strDefaultOutputDeviceName = Utf8ToCString(Pa_GetDeviceInfo(defaultWasapiOutputDevice)->name);
   for (int i = 0; i < numDevices; ++i) {
     const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
     const PaHostApiInfo *apiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
     if (apiInfo->type == PaHostApiTypeId::paWASAPI) {
       if (deviceInfo->maxInputChannels > 0) {
-        idx_to_pa_device[numWasapiInputDevices] = i;
-        numWasapiInputDevices++;
+        CString strDeviceName = Utf8ToCString(deviceInfo->name);
+        if (strDeviceName.Find(CString("[Loopback]")) != -1) {
+          if (strDeviceName.Find(strDefaultOutputDeviceName) != -1) {
+            defaultWasapiLoopbackDevice = i;
+            break;
+          }
+        }
+      }
+    }
+  }
+  if (defaultWasapiLoopbackDevice == -1) {
+    AppendLineToMultilineEditCtrl("No default loopback device found!");
+    my_btn_.EnableWindow(FALSE);
+    return;
+  }
+
+  // List all WASAPI input devices
+  int numWasapiInputDevices = 0;
+  idx_to_pa_device[numWasapiInputDevices++] = defaultWasapiInputDevice; // item 0 is the default device
+  my_combo_devices_.AddString(_T("Default"));
+  idx_to_pa_device[numWasapiInputDevices++] = defaultWasapiLoopbackDevice; // item 1 is the default loopback device
+  my_combo_devices_.AddString(_T("Default [Loopback]"));
+  // Enumerate all WASAPI input devices
+  for (int i = 0; i < numDevices; ++i) {
+    const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
+    const PaHostApiInfo *apiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
+    if (apiInfo->type == PaHostApiTypeId::paWASAPI) {
+      if (deviceInfo->maxInputChannels > 0) {
+        idx_to_pa_device[numWasapiInputDevices++] = i;
         my_combo_devices_.AddString(Utf8ToCString(deviceInfo->name));
       }
     }

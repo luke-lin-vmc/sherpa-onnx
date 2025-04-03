@@ -1,3 +1,10 @@
+## Improvements
+1. Upgrade portaudio
+2. MFC example to enable loopback recording (thru WASAPI hostapi)
+3. Fixed MFC example setting errors, MFC example now can switch debug and release build without rebuilding Sherpa-Onnx libs
+
+![gui](https://github.com/user-attachments/assets/3fe6d807-adc0-404e-b582-23b750318ac9)
+
 ## Code base: Sherpa-Onnx v1.11.2
 * https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2
 
@@ -46,16 +53,13 @@ The executable file location
 2. Rename models and tokenizer to "decoder.onnx", "encoder.onnx", "joiner.onnx" and "tokens.txt", and put them along with the .EXE file
 
 ### Run the program
-![gui](https://github.com/user-attachments/assets/3fe6d807-adc0-404e-b582-23b750318ac9)
+```
+.\x64\Release\StreamingSpeechRecognition.exe
+```
 
 ### Reference
 * https://k2-fsa.github.io/sherpa/onnx/install/windows.html#bit-windows-x64
 * https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2/mfc-examples
-
-## Improvements
-1. Upgrade portaudio
-2. MFC example to enable loopback recording (thru WASAPI hostapi)
-3. Fixed MFC example setting errors, MFC example now can switch debug and release build without rebuilding Sherpa-Onnx libs
 
 ### Issue
 With the original [repo](https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2), you might get `Link Error` while "Build Debug MFC example". This is becasue Debug MFC example needs to link debug "onnxruntime.lib". However, below two CMake scripts put both debug and release "onnxruntime.lib" into the same location. Means "Build Release Libs and Examples" will overwrite the debug "onnxruntime.lib" with release "onnxruntime.lib". The LINK error will happen when Debug MFC example links to release "onnxruntime.lib"

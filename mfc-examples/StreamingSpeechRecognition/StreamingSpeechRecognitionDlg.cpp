@@ -217,19 +217,7 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
   }
 }
 
-CString Utf8ToCString(const char *utf8Str) {
-  if (!utf8Str) return _T("");
-
-  int len = MultiByteToWideChar(CP_UTF8, 0, utf8Str, -1, NULL, 0);
-  if (len == 0) return _T("");
-
-  CStringW wideName;
-  MultiByteToWideChar(CP_UTF8, 0, utf8Str, -1, wideName.GetBuffer(len), len);
-  wideName.ReleaseBuffer();
-
-  // Convert wide to CString (TCHAR), which is UTF-16 in Unicode builds
-  return CString(wideName);
-}
+static std::wstring Utf8ToUtf16(const std::string &utf8);
 
 void CStreamingSpeechRecognitionDlg::InitMicrophone() {
   int numHostApis = Pa_GetHostApiCount();
@@ -262,15 +250,15 @@ void CStreamingSpeechRecognitionDlg::InitMicrophone() {
 
   // Find default WASAPI loopback device i.e. default output device with postfix "[Loopback]" 
   int defaultWasapiLoopbackDevice = -1;
-  CString strDefaultOutputDeviceName = Utf8ToCString(Pa_GetDeviceInfo(defaultWasapiOutputDevice)->name);
+  std::string strDefaultOutputDeviceName = std::string(Pa_GetDeviceInfo(defaultWasapiOutputDevice)->name);
   for (int i = 0; i < numDevices; ++i) {
     const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
     const PaHostApiInfo *apiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
     if (apiInfo->type == PaHostApiTypeId::paWASAPI) {
       if (deviceInfo->maxInputChannels > 0) {
-        CString strDeviceName = Utf8ToCString(deviceInfo->name);
-        if (strDeviceName.Find(CString("[Loopback]")) != -1) {
-          if (strDeviceName.Find(strDefaultOutputDeviceName) != -1) {
+        std::string strDeviceName = std::string(deviceInfo->name);
+        if (strDeviceName.find(std::string("[Loopback]")) != std::string::npos) {
+          if (strDeviceName.find(strDefaultOutputDeviceName) != std::string::npos) {
             defaultWasapiLoopbackDevice = i;
             break;
           }
@@ -286,6 +274,7 @@ void CStreamingSpeechRecognitionDlg::InitMicrophone() {
 
   // List all WASAPI input devices
   int numWasapiInputDevices = 0;
+  my_combo_devices_.ResetContent();
   idx_to_pa_device[numWasapiInputDevices++] = defaultWasapiInputDevice; // item 0 is the default device
   my_combo_devices_.AddString(_T("Default"));
   idx_to_pa_device[numWasapiInputDevices++] = defaultWasapiLoopbackDevice; // item 1 is the default loopback device
@@ -297,7 +286,8 @@ void CStreamingSpeechRecognitionDlg::InitMicrophone() {
     if (apiInfo->type == PaHostApiTypeId::paWASAPI) {
       if (deviceInfo->maxInputChannels > 0) {
         idx_to_pa_device[numWasapiInputDevices++] = i;
-        my_combo_devices_.AddString(Utf8ToCString(deviceInfo->name));
+        auto str = Utf8ToUtf16(std::string(deviceInfo->name));
+        my_combo_devices_.AddString(str.c_str());
       }
     }
   }

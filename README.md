@@ -30,23 +30,15 @@ cmake --build . --config Debug
 ```
 cd ..\mfc-examples
 msbuild .\mfc-examples.sln /property:Configuration=Release /property:Platform=x64
-(or VC to open mfc-examples.sln, then build Release solution
+(or VC to open mfc-examples.sln, then build Release solution)
 ```
-The executable file location
-```
-.\x64\Release\StreamingSpeechRecognition.exe
-```
-
 ###  (Optional) Build Debug MFC example
 ```
 cd ..\mfc-examples
 msbuild .\mfc-examples.sln /property:Configuration=Debug /property:Platform=x64
-(or VC to open mfc-examples.sln, then build Debug solution
+(or VC to open mfc-examples.sln, then build Debug solution)
 ```
-The executable file location
-```
-.\x64\Debug\StreamingSpeechRecognition.exe
-```
+The .EXE files will be under .\x64\Release or .\x64\Debug
 
 ### Prepare Models
 1. Download and decompress models and tokenizer from https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2

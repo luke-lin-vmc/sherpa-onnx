@@ -1,18 +1,18 @@
 function(download_portaudio)
   include(FetchContent)
 
-  # Get the source code from commit 35e35d4 (3/15/2025). https://github.com/PortAudio/portaudio/commit/35e35d46caa07024d3623f57ae7beaf21282c441
-  set(portaudio_URL  "https://github.com/PortAudio/portaudio/archive/35e35d46caa07024d3623f57ae7beaf21282c441.zip")
-  set(portaudio_HASH "SHA256=0953911f0f25a423cdbc9a38ed77d629421a3012187a2cd435c3e0f68699132f")
+  # Get the source code from commit ccd16c8 (4/25/2025). https://github.com/PortAudio/portaudio/commit/ccd16c85e64d8c1a5462541388b6fbcaedbb1cad
+  set(portaudio_URL  "https://github.com/PortAudio/portaudio/archive/ccd16c85e64d8c1a5462541388b6fbcaedbb1cad.zip")
+  set(portaudio_HASH "SHA256=5f5389c3e3b906a8a1d2cf765c69f1c448e04deab044bc627e8ec6b31dc2b54c")
 
   # If you don't have access to the Internet, please download it to your
   # local drive and modify the following line according to your needs.
   set(possible_file_locations
-    $ENV{HOME}/Downloads/35e35d46caa07024d3623f57ae7beaf21282c441.zip
-    $ENV{HOME}/asr/35e35d46caa07024d3623f57ae7beaf21282c441.zip
-    ${CMAKE_SOURCE_DIR}/35e35d46caa07024d3623f57ae7beaf21282c441.zip
-    ${CMAKE_BINARY_DIR}/35e35d46caa07024d3623f57ae7beaf21282c441.zip
-    /tmp/35e35d46caa07024d3623f57ae7beaf21282c441.zip
+    $ENV{HOME}/Downloads/ccd16c85e64d8c1a5462541388b6fbcaedbb1cad.zip
+    $ENV{HOME}/asr/ccd16c85e64d8c1a5462541388b6fbcaedbb1cad.zip
+    ${CMAKE_SOURCE_DIR}/ccd16c85e64d8c1a5462541388b6fbcaedbb1cad.zip
+    ${CMAKE_BINARY_DIR}/ccd16c85e64d8c1a5462541388b6fbcaedbb1cad.zip
+    /tmp/ccd16c85e64d8c1a5462541388b6fbcaedbb1cad.zip
   )
 
   foreach(f IN LISTS possible_file_locations)

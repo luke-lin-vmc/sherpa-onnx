@@ -1,3 +1,73 @@
+## Forked from Sherpa-Onnx
+* https://github.com/k2-fsa/sherpa-onnx
+
+## Improvements
+* Upgrade [portaudio](https://github.com/PortAudio/portaudio)
+* MFC example to enable loopback recording (thru WASAPI hostapi)
+* Fixed MFC example project settings. MFC example now can switch debug and release build without rebuilding Sherpa-Onnx libs (see Fixed issues)
+
+![gui](https://github.com/user-attachments/assets/3fe6d807-adc0-404e-b582-23b750318ac9)
+
+## Work Flow
+### Git clone
+```
+git clone https://github.com/luke-lin-vmc/sherpa-onnx
+cd sherpa-onnx
+mkdir build
+cd build
+```
+### Build Release Libs and Examples
+```
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . --config Release
+```
+### (Optional) Build Debug Libs and Examples
+```
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build . --config Debug
+```
+### Build Release MFC example
+```
+cd ..\mfc-examples
+msbuild .\mfc-examples.sln /property:Configuration=Release /property:Platform=x64
+(or Visual C++ to open mfc-examples.sln, then build Release solution)
+```
+###  (Optional) Build Debug MFC example
+```
+cd ..\mfc-examples
+msbuild .\mfc-examples.sln /property:Configuration=Debug /property:Platform=x64
+(or Visual C++ to open mfc-examples.sln, then build Debug solution)
+```
+The `StreamingSpeechRecognition.exe` files will be under `.\x64\Release` or `.\x64\Debug`
+
+### Prepare Models
+1. Download and decompress models and tokenizer from https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+2. Rename models and tokenizer to "decoder.onnx", "encoder.onnx", "joiner.onnx" and "tokens.txt", and put them along with the `StreamingSpeechRecognition.exe`
+
+Note: You may change the model to support different languages. All the models can be found at https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
+This app is a streaming (so called on-line recognition or real-time recognition) pipeline, only the streaming models (model name contains “streaming”, such like sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2)) can be used.
+
+### Run the program
+```
+.\x64\Release\StreamingSpeechRecognition.exe
+```
+
+## Fixed issues
+1. With the original [repo](https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2), you might get `Link Error` while "Build Debug MFC example". This is becasue Debug MFC example needs to link debug "onnxruntime.lib". However, below two CMake scripts put both debug and release "onnxruntime.lib" into the same location. Means "Build Release Libs and Examples" will overwrite the debug "onnxruntime.lib" with release "onnxruntime.lib". The LINK error will happen when Debug MFC example links to release "onnxruntime.lib"
+* https://github.com/k2-fsa/sherpa-onnx/blob/master/cmake/onnxruntime-win-x64-static-debug.cmake#L67
+* https://github.com/k2-fsa/sherpa-onnx/blob/master/cmake/onnxruntime-win-x86-static.cmake#L63
+2. Solution
+* Modify the cmake script by copying debug "onnxruntime.lib" to lib/Debug, and copying release "onnxruntime.lib" to lib/Release.
+* Make MFC example to link differnet "onnxruntime.lib" per the configuration (Debug/Release)
+
+## Reference
+* https://k2-fsa.github.io/sherpa/onnx/install/windows.html#bit-windows-x64
+* https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2/mfc-examples
+
+
+## ------------- Original README.md -------------------
+
+
 ### Supported functions
 
 |Speech recognition| Speech synthesis |

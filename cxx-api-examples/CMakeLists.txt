@@ -34,7 +34,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   )
   target_link_libraries(sense-voice-simulate-streaming-microphone-cxx-api
     sherpa-onnx-cxx-api
-    portaudio_static
+    portaudio
   )
 
   add_executable(parakeet-tdt-simulate-streaming-microphone-cxx-api
@@ -43,7 +43,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   )
   target_link_libraries(parakeet-tdt-simulate-streaming-microphone-cxx-api
     sherpa-onnx-cxx-api
-    portaudio_static
+    portaudio
   )
 endif()
 
@@ -54,7 +54,7 @@ if(SHERPA_ONNX_HAS_ALSA)
   )
   target_link_libraries(sense-voice-simulate-streaming-alsa-cxx-api
     sherpa-onnx-cxx-api
-    portaudio_static
+    portaudio
   )
 
   if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})

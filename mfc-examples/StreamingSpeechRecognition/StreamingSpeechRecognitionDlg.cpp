@@ -64,6 +64,8 @@ ON_WM_QUERYDRAGICON()
 ON_BN_CLICKED(IDOK, &CStreamingSpeechRecognitionDlg::OnBnClickedOk)
 ON_CBN_SELCHANGE(IDC_COMBO1,
                  &CStreamingSpeechRecognitionDlg::OnCbnSelchangeCombo1)
+ON_WM_GETMINMAXINFO()
+ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 // CStreamingSpeechRecognitionDlg message handlers
@@ -75,6 +77,17 @@ BOOL CStreamingSpeechRecognitionDlg::OnInitDialog() {
   //  when the application's main window is not a dialog
   SetIcon(m_hIcon, TRUE);   // Set big icon
   SetIcon(m_hIcon, FALSE);  // Set small icon
+
+  // Calculate and keep the margins
+  CRect rect, edit_rect;
+  GetClientRect(&rect);
+  minDiagWidth_ = rect.Width();
+  my_text_.GetWindowRect(&edit_rect);
+  ScreenToClient(&edit_rect);
+  marginEditLeft_ = edit_rect.left - rect.left;
+  marginEditTop_ = edit_rect.top - rect.top;
+  marginEditRight_ = rect.right - edit_rect.right;
+  marginEditBottom_ = rect.bottom - edit_rect.bottom;
 
   // TODO: Add extra initialization here
   SetWindowText(_T("Real-time speech recogntion with Next-gen Kaldi"));
@@ -620,4 +633,33 @@ int CStreamingSpeechRecognitionDlg::RunThread() {
 void CStreamingSpeechRecognitionDlg::OnCbnSelchangeCombo1() {
   // TODO: Add your control notification handler code here
   pa_device_ = idx_to_pa_device[my_combo_devices_.GetCurSel()];
+}
+
+void CStreamingSpeechRecognitionDlg::OnGetMinMaxInfo(MINMAXINFO *lpMMI) {
+  // TODO: Add your message handler code here and/or call default
+
+  // Minimum width and height in pixels
+  const int minWidth = minDiagWidth_;
+  const int minHeight = marginEditTop_ + 140;  // keep at least 3 lines for display
+
+  lpMMI->ptMinTrackSize.x = minWidth;
+  lpMMI->ptMinTrackSize.y = minHeight;
+
+  CDialogEx::OnGetMinMaxInfo(lpMMI);
+}
+
+void CStreamingSpeechRecognitionDlg::OnSize(UINT nType, int cx, int cy) {
+  CDialogEx::OnSize(nType, cx, cy);
+  // TODO: Add your message handler code here
+  
+  // Ensure my_text_ is valid (only after dialog is created)
+  if (my_text_.GetSafeHwnd())
+  {
+    CRect rect;
+    GetClientRect(&rect);
+    // Resize edit control window to fit dialog client area
+    my_text_.MoveWindow(marginEditLeft_, marginEditTop_,
+                        rect.Width() - marginEditLeft_ - marginEditRight_,
+                        rect.Height() - marginEditTop_ - marginEditBottom_);
+  }
 }

@@ -55,6 +55,8 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
   CButton my_btn_;
   CEdit my_text_;
   CComboBox my_combo_devices_;
+  int minDiagWidth_;   // minimum dialog width
+  int marginEditLeft_, marginEditTop_, marginEditRight_, marginEditBottom_;   // margins between the edges of Edit control and the dialog
 
  public:
   bool started_ = false;
@@ -64,6 +66,8 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
   int RunThread();
   afx_msg void OnBnClickedOk();
   afx_msg void OnCbnSelchangeCombo1();
+  afx_msg void OnGetMinMaxInfo(MINMAXINFO *lpMMI);
+  afx_msg void OnSize(UINT nType, int cx, int cy);
 
  private:
   void AppendTextToEditCtrl(const std::string &s);

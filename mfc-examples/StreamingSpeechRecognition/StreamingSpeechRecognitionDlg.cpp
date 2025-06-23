@@ -49,6 +49,7 @@ CStreamingSpeechRecognitionDlg::CStreamingSpeechRecognitionDlg(
 CStreamingSpeechRecognitionDlg::~CStreamingSpeechRecognitionDlg() {
   if (started_) {
     started_ = false;
+    Pa_Sleep(200);  // sleep for 200ms
     if (pa_stream_)
       Pa_CloseStream(pa_stream_);
     if (thread_)

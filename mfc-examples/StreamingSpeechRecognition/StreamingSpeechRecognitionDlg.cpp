@@ -148,8 +148,9 @@ static int32_t RecordCallback(const void *input_buffer,
   auto dlg = reinterpret_cast<CStreamingSpeechRecognitionDlg *>(user_data);
 
   auto stream = dlg->stream_;
+  int rate = dlg->sample_rate_;
   if (stream) {
-    SherpaOnnxOnlineStreamAcceptWaveform(stream, 48000, reinterpret_cast<const float *>(input_buffer),
+    SherpaOnnxOnlineStreamAcceptWaveform(stream, rate, reinterpret_cast<const float *>(input_buffer),
                    frames_per_buffer);
   }
 
@@ -186,11 +187,11 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     param.sampleFormat = paFloat32;
     param.suggestedLatency = info->defaultLowInputLatency;
     param.hostApiSpecificStreamInfo = nullptr;
-    float sample_rate = 48000;
+    sample_rate_ = (int)info->defaultSampleRate;
     pa_stream_ = nullptr;
     PaError err =
         Pa_OpenStream(&pa_stream_, &param, nullptr, /* &outputParameters, */
-                      sample_rate,
+                      (double)sample_rate_,
                       0,          // frames per buffer
                       paClipOff,  // we won't output out of range samples
                                   // so don't bother clipping them
@@ -242,6 +243,7 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
 }
 
 static std::wstring Utf8ToUtf16(const std::string &utf8);
+
 #if DEBUG_AUDIO
 void CStreamingSpeechRecognitionDlg::CheckDeviceCapability(int deviceIndex) {
   const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(deviceIndex);

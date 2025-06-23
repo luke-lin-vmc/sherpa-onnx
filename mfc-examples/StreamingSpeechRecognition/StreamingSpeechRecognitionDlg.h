@@ -48,8 +48,6 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
 
   const SherpaOnnxOnlineRecognizer *recognizer_ = nullptr;
 
-  int pa_device_ = -1;
-  std::map<int, int> idx_to_pa_device;
   PaStream *pa_stream_ = nullptr;
   RecognizerThread *thread_ = nullptr;
   CButton my_btn_;
@@ -61,6 +59,9 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
  public:
   bool started_ = false;
   const SherpaOnnxOnlineStream *stream_ = nullptr;
+  int pa_device_ = -1;
+  std::map<int, int> idx_to_pa_device;
+  int sample_rate_ = 48000;
 
  public:
   int RunThread();

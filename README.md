@@ -40,12 +40,45 @@ msbuild .\mfc-examples.sln /property:Configuration=Debug /property:Platform=x64
 ```
 The `StreamingSpeechRecognition.exe` files will be under `.\x64\Release` or `.\x64\Debug`
 
-### Prepare Models
+### Prepare Zipformer Models
 1. Download and decompress models and tokenizer from https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-2. Rename models and tokenizer to "decoder.onnx", "encoder.onnx", "joiner.onnx" and "tokens.txt", and put them along with the `StreamingSpeechRecognition.exe`
+2. Rename models and tokenizer to `decoder.onnx`, `encoder.onnx`, `joiner.onnx` and `tokens.txt`. Put them along with the `StreamingSpeechRecognition.exe`. An example below.
+```
+   D:\ASR\Sherpa-onnx\zipformer\>tree /F
+   Folder PATH listing for volume OSDisk
+   Volume serial number is C2C8-D7B9
+   C:.
+       decoder.onnx
+       encoder.onnx
+       joiner.onnx
+       StreamingSpeechRecognition.exe
+       tokens.txt
+```
+Note: You may change the model to support different languages. All the zipformer models can be found at https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
+This app is a streaming (aka on-line or real-time) pipeline, only the streaming models (model name contains “streaming”, such like sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2) can be used.
 
-Note: You may change the model to support different languages. All the models can be found at https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
-This app is a streaming (so called on-line recognition or real-time recognition) pipeline, only the streaming models (model name contains “streaming”, such like sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2)) can be used.
+### (Optional) Prepare Paraformer Models
+1. You may use paraformer models instead of zipformer models
+2. Download and decompress models and tokenizer from https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+3. Rename models and tokenizer to `paraformer-decoder.onnx`, `paraformer-encoder.onnx` and `tokens.txt`. Put them along with the `StreamingSpeechRecognition.exe`. An example below.
+
+```
+   D:\ASR\Sherpa-onnx\paraformer>tree /F
+   Folder PATH listing for volume OSDisk
+   Volume serial number is C2C8-D7B9
+   C:.
+       paraformer-decoder.onnx
+       paraformer-encoder.onnx
+       StreamingSpeechRecognition.exe
+       tokens.txt
+```
+Note: You may change the model to support different languages. All the paraformer models can be found at https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
+This app is a streaming (aka on-line or real-time) pipeline, only the streaming models (model name contains “streaming”, such like sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en.tar.bz2
+) can be used.
+
+### (Optional) Traditional Chinese Support
+Currently the models support Chinese output Simplified Chinese only. You may convert "tokens.txt" to Traditional Chinese to output Traditional Chinese. Several methods can do the conversion. One of the methods is to use MS Word.
+https://answers.microsoft.com/en-us/msoffice/forum/all/in-ms-365-word-how-to-convert-traditional-chinese/f46cdf06-f404-429a-86cb-74f4d8bfb114
 
 ### Run the program
 ```
@@ -53,7 +86,7 @@ This app is a streaming (so called on-line recognition or real-time recognition)
 ```
 
 ## Fixed issues
-1. With the original [repo](https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2), you might get `Link Error` while "Build Debug MFC example". This is becasue Debug MFC example needs to link debug "onnxruntime.lib". However, below two CMake scripts put both debug and release "onnxruntime.lib" into the same location. Means "Build Release Libs and Examples" will overwrite the debug "onnxruntime.lib" with release "onnxruntime.lib". The LINK error will happen when Debug MFC example links to release "onnxruntime.lib"
+1. With the original [repo](https://github.com/k2-fsa/sherpa-onnx), you might get `Link Error` while "Build Debug MFC example". This is becasue Debug MFC example needs to link debug "onnxruntime.lib". However, below two CMake scripts put both debug and release "onnxruntime.lib" into the same location. Means "Build Release Libs and Examples" will overwrite the debug "onnxruntime.lib" with release "onnxruntime.lib". The LINK error will happen when Debug MFC example links to release "onnxruntime.lib"
 * https://github.com/k2-fsa/sherpa-onnx/blob/master/cmake/onnxruntime-win-x64-static-debug.cmake#L67
 * https://github.com/k2-fsa/sherpa-onnx/blob/master/cmake/onnxruntime-win-x86-static.cmake#L63
 2. Solution

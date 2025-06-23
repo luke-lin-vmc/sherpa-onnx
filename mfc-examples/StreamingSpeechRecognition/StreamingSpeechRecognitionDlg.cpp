@@ -20,10 +20,12 @@
 #define new DEBUG_NEW
 #endif
 
+#define DEBUG_AUDIO 0
+
 Microphone::Microphone() {
   PaError err = Pa_Initialize();
   if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
+    fprintf(stderr, "portaudio error - Pa_Initialize(): %s\n", Pa_GetErrorText(err));
     exit(-2);
   }
 }
@@ -31,7 +33,7 @@ Microphone::Microphone() {
 Microphone::~Microphone() {
   PaError err = Pa_Terminate();
   if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
+    fprintf(stderr, "portaudio error - Pa_Terminate(): %s\n", Pa_GetErrorText(err));
     exit(-2);
   }
 }
@@ -176,7 +178,7 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
 
     stream_ = SherpaOnnxCreateOnlineStream(recognizer_);
 
-    AppendLineToMultilineEditCtrl(std::string("Selected device ") + Pa_GetDeviceInfo(pa_device_)->name);
+    AppendLineToMultilineEditCtrl(std::string("Selected device: ") + Pa_GetDeviceInfo(pa_device_)->name);
     PaStreamParameters param;
     param.device = pa_device_;
     const PaDeviceInfo *info = Pa_GetDeviceInfo(param.device);
@@ -194,7 +196,7 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
                                   // so don't bother clipping them
                       RecordCallback, this);
     if (err != paNoError) {
-      AppendLineToMultilineEditCtrl(std::string("PortAudio error: ") +
+      AppendLineToMultilineEditCtrl(std::string("PortAudio error - Pa_OpenStream(): ") +
                                     Pa_GetErrorText(err));
       my_btn_.EnableWindow(FALSE);
       return;
@@ -202,8 +204,9 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
 
     err = Pa_StartStream(pa_stream_);
     if (err != paNoError) {
-      AppendLineToMultilineEditCtrl(std::string("PortAudio error: ") +
+      AppendLineToMultilineEditCtrl(std::string("PortAudio error - Pa_StartStream(): ") +
                                     Pa_GetErrorText(err));
+      Pa_CloseStream(pa_stream_);
       my_btn_.EnableWindow(FALSE);
       return;
     }
@@ -220,7 +223,7 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     if (pa_stream_) {
       PaError err = Pa_CloseStream(pa_stream_);
       if (err != paNoError) {
-        AppendLineToMultilineEditCtrl(std::string("PortAudio error: ") +
+        AppendLineToMultilineEditCtrl(std::string("PortAudio error - Pa_CloseStream(): ") +
                                       Pa_GetErrorText(err));
         my_btn_.EnableWindow(FALSE);
         return;
@@ -239,6 +242,51 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
 }
 
 static std::wstring Utf8ToUtf16(const std::string &utf8);
+#if DEBUG_AUDIO
+void CStreamingSpeechRecognitionDlg::CheckDeviceCapability(int deviceIndex) {
+  const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(deviceIndex);
+  if (!deviceInfo) {
+    AppendLineToMultilineEditCtrl("Device info not available");
+    return;
+  }
+
+  AppendLineToMultilineEditCtrl(std::string("Device: ") + deviceInfo->name);
+
+  char buffer[256];
+  sprintf_s(buffer, "Default sample rate: %.0f Hz", deviceInfo->defaultSampleRate);
+  AppendLineToMultilineEditCtrl(buffer);
+
+  sprintf_s(buffer, "Max input channels: %d", deviceInfo->maxInputChannels);
+  AppendLineToMultilineEditCtrl(buffer);
+
+  // Check supported sample rate and channel number
+  double sampleRates[] = {8000, 16000, 22050, 44100, 48000, 96000};
+  int numRates = sizeof(sampleRates) / sizeof(sampleRates[0]);
+  int channels[] = {1, 2, 4};
+  int numChannels = sizeof(channels) / sizeof(channels[0]);
+
+  for (int n = 0; n < numChannels; n++) {
+    if (channels[n] > deviceInfo->maxInputChannels) break;
+    sprintf_s(buffer, "Supported sample rates @ %d channel(s)", channels[n]);
+    AppendLineToMultilineEditCtrl(buffer);
+    for (int i = 0; i < numRates; i++) {
+      PaStreamParameters inputParams;
+      inputParams.device = deviceIndex;
+      inputParams.channelCount = channels[n];
+      inputParams.sampleFormat = paFloat32;
+      inputParams.suggestedLatency = deviceInfo->defaultLowInputLatency;
+      inputParams.hostApiSpecificStreamInfo = NULL;
+
+      PaError err = Pa_IsFormatSupported(&inputParams, NULL, sampleRates[i]);
+      sprintf_s(
+          buffer, "  %.0f Hz - %s", sampleRates[i],
+          (err == paFormatIsSupported) ? "SUPPORTED" : Pa_GetErrorText(err));
+      AppendLineToMultilineEditCtrl(buffer);
+    }
+  }
+  AppendLineToMultilineEditCtrl("\n");
+}
+#endif
 
 void CStreamingSpeechRecognitionDlg::InitMicrophone() {
   int numHostApis = Pa_GetHostApiCount();
@@ -322,6 +370,9 @@ void CStreamingSpeechRecognitionDlg::InitMicrophone() {
   // Select first entry as the default device
   my_combo_devices_.SetCurSel(0);
   pa_device_ = idx_to_pa_device[my_combo_devices_.GetCurSel()];
+#if DEBUG_AUDIO
+  CheckDeviceCapability(pa_device_);
+#endif
 }
 
 bool CStreamingSpeechRecognitionDlg::Exists(const std::string &filename) {
@@ -647,6 +698,9 @@ int CStreamingSpeechRecognitionDlg::RunThread() {
 void CStreamingSpeechRecognitionDlg::OnCbnSelchangeCombo1() {
   // TODO: Add your control notification handler code here
   pa_device_ = idx_to_pa_device[my_combo_devices_.GetCurSel()];
+#if DEBUG_AUDIO
+  CheckDeviceCapability(pa_device_);
+#endif
 }
 
 void CStreamingSpeechRecognitionDlg::OnGetMinMaxInfo(MINMAXINFO *lpMMI) {

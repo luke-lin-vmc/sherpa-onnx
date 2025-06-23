@@ -73,6 +73,7 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
   void AppendTextToEditCtrl(const std::string &s);
   void AppendLineToMultilineEditCtrl(const std::string &s);
   void InitMicrophone();
+  void CheckDeviceCapability(int deviceIndex);
 
   bool Exists(const std::string &filename);
   void InitRecognizer();

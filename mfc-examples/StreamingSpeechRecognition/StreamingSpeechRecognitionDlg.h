@@ -62,6 +62,7 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
   int pa_device_ = -1;
   std::map<int, int> idx_to_pa_device;
   int sample_rate_ = 48000;
+  int num_channels_ = 1;
 
  public:
   int RunThread();
@@ -75,6 +76,7 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
   void AppendLineToMultilineEditCtrl(const std::string &s);
   void InitMicrophone();
   void CheckDeviceCapability(int deviceIndex);
+  int GetMinSupportedChannels(int deviceIndex);
 
   bool Exists(const std::string &filename);
   void InitRecognizer();

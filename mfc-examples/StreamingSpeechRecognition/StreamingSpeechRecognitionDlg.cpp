@@ -150,9 +150,19 @@ static int32_t RecordCallback(const void *input_buffer,
 
   auto stream = dlg->stream_;
   int rate = dlg->sample_rate_;
+  int channels = dlg->num_channels_;
   if (stream) {
-    SherpaOnnxOnlineStreamAcceptWaveform(stream, rate, reinterpret_cast<const float *>(input_buffer),
-                   frames_per_buffer);
+    const float *in_buf = reinterpret_cast<const float *>(input_buffer);
+    if (channels == 1) {
+      SherpaOnnxOnlineStreamAcceptWaveform(stream, rate, in_buf, frames_per_buffer);
+    }
+    else {
+      std::vector<float> pcmf32(frames_per_buffer);  // store one channel's samples
+      for (unsigned int i = 0; i < frames_per_buffer; i++) {
+        pcmf32[i] = in_buf[i * channels + 0];  // extract only channel 0
+      }
+      SherpaOnnxOnlineStreamAcceptWaveform(stream, rate, pcmf32.data(), frames_per_buffer);
+    }
   }
 
   return dlg->started_ ? paContinue : paComplete;
@@ -184,12 +194,16 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     PaStreamParameters param;
     param.device = pa_device_;
     const PaDeviceInfo *info = Pa_GetDeviceInfo(param.device);
-    param.channelCount = 1;
+    num_channels_ = GetMinSupportedChannels(param.device);
+    param.channelCount = num_channels_;
     param.sampleFormat = paFloat32;
     param.suggestedLatency = info->defaultLowInputLatency;
     param.hostApiSpecificStreamInfo = nullptr;
     sample_rate_ = (int)info->defaultSampleRate;
     pa_stream_ = nullptr;
+    char buffer[256];
+    sprintf_s(buffer, "Sample rate: %d Hz, Channels: %d", sample_rate_, num_channels_);
+    AppendLineToMultilineEditCtrl(buffer);
     PaError err =
         Pa_OpenStream(&pa_stream_, &param, nullptr, /* &outputParameters, */
                       (double)sample_rate_,
@@ -290,6 +304,38 @@ void CStreamingSpeechRecognitionDlg::CheckDeviceCapability(int deviceIndex) {
   AppendLineToMultilineEditCtrl("\n");
 }
 #endif
+
+int CStreamingSpeechRecognitionDlg::GetMinSupportedChannels(int deviceIndex) {
+  const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(deviceIndex);
+  if (!deviceInfo) {
+    AppendLineToMultilineEditCtrl("Device info not available");
+    return -1;
+  }
+
+  int minSupportedChannels = 1;  // return 1 channel by default
+
+  // Check supported channel number
+  int channels[] = {1, 2, 4};
+  int numChannels = sizeof(channels) / sizeof(channels[0]);
+
+  for (int n = 0; n < numChannels; n++) {
+    if (channels[n] > deviceInfo->maxInputChannels)
+      break;
+    PaStreamParameters inputParams;
+    inputParams.device = deviceIndex;
+    inputParams.channelCount = channels[n];
+    inputParams.sampleFormat = paFloat32;
+    inputParams.suggestedLatency = deviceInfo->defaultLowInputLatency;
+    inputParams.hostApiSpecificStreamInfo = NULL;
+    PaError err = Pa_IsFormatSupported(&inputParams, NULL, deviceInfo->defaultSampleRate);
+    if (err == paFormatIsSupported) {
+      minSupportedChannels = channels[n];
+      break;
+    }
+  }
+
+  return minSupportedChannels;
+}
 
 void CStreamingSpeechRecognitionDlg::InitMicrophone() {
   int numHostApis = Pa_GetHostApiCount();

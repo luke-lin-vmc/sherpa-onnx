@@ -45,6 +45,14 @@ CStreamingSpeechRecognitionDlg::CStreamingSpeechRecognitionDlg(
 }
 
 CStreamingSpeechRecognitionDlg::~CStreamingSpeechRecognitionDlg() {
+  if (started_) {
+    started_ = false;
+    if (pa_stream_)
+      Pa_CloseStream(pa_stream_);
+    if (thread_)
+      WaitForSingleObject(thread_->m_hThread, INFINITE);
+  }
+  
   if (recognizer_) {
     SherpaOnnxDestroyOnlineRecognizer(recognizer_);
     recognizer_ = nullptr;

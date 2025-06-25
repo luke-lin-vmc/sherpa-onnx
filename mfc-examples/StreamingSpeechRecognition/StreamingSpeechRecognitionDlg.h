@@ -58,6 +58,7 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
 
  public:
   bool started_ = false;
+  bool needRestart_ = false;
   const SherpaOnnxOnlineStream *stream_ = nullptr;
   int pa_device_ = -1;
   std::map<int, int> idx_to_pa_device;

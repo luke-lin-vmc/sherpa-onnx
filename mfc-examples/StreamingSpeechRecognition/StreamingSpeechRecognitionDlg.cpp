@@ -54,6 +54,8 @@ CStreamingSpeechRecognitionDlg::~CStreamingSpeechRecognitionDlg() {
       Pa_CloseStream(pa_stream_);
     if (thread_)
       WaitForSingleObject(thread_->m_hThread, INFINITE);
+    if (stream_)
+      SherpaOnnxDestroyOnlineStream(stream_);
   }
   
   if (recognizer_) {
@@ -169,6 +171,41 @@ static int32_t RecordCallback(const void *input_buffer,
 }
 
 void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
+  CString strCurBtnTxt;
+  my_btn_.GetWindowText(strCurBtnTxt);
+  if (strCurBtnTxt == _T("Start")) {
+    if (needRestart_) {
+      AppendLineToMultilineEditCtrl("Restarting...");
+      started_ = false;
+      Pa_Sleep(200);  // sleep for 200ms
+      if (pa_stream_) {
+        if (Pa_IsStreamActive(pa_stream_)) {
+          Pa_StopStream(pa_stream_);
+        }
+        Pa_CloseStream(pa_stream_);
+        pa_stream_ = nullptr;
+      }
+
+      if (thread_) {
+        WaitForSingleObject(thread_->m_hThread, INFINITE);
+        delete thread_;
+        thread_ = nullptr;
+      }
+
+      if (stream_) {
+        SherpaOnnxDestroyOnlineStream(stream_);
+        stream_ = nullptr;
+      }
+
+      if (recognizer_) {
+        SherpaOnnxDestroyOnlineRecognizer(recognizer_);
+        recognizer_ = nullptr;
+      }
+
+      needRestart_ = false;
+    }
+  }
+
   if (!recognizer_) {
     AppendLineToMultilineEditCtrl("Creating recognizer...");
     AppendLineToMultilineEditCtrl("It will take several seconds. Please wait");
@@ -214,7 +251,7 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     if (err != paNoError) {
       AppendLineToMultilineEditCtrl(std::string("PortAudio error - Pa_OpenStream(): ") +
                                     Pa_GetErrorText(err));
-      my_btn_.EnableWindow(FALSE);
+      needRestart_ = true;
       return;
     }
 
@@ -223,7 +260,7 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
       AppendLineToMultilineEditCtrl(std::string("PortAudio error - Pa_StartStream(): ") +
                                     Pa_GetErrorText(err));
       Pa_CloseStream(pa_stream_);
-      my_btn_.EnableWindow(FALSE);
+      needRestart_ = true;
       return;
     }
     AppendLineToMultilineEditCtrl("Started! Please speak");
@@ -241,7 +278,7 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
       if (err != paNoError) {
         AppendLineToMultilineEditCtrl(std::string("PortAudio error - Pa_CloseStream(): ") +
                                       Pa_GetErrorText(err));
-        my_btn_.EnableWindow(FALSE);
+        needRestart_ = true;
         return;
       }
     }

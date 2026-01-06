@@ -93,6 +93,9 @@ https://answers.microsoft.com/en-us/msoffice/forum/all/in-ms-365-word-how-to-con
 * Modify the cmake script by copying debug "onnxruntime.lib" to lib/Debug, and copying release "onnxruntime.lib" to lib/Release.
 * Make MFC example to link differnet "onnxruntime.lib" per the configuration (Debug/Release)
 
+## Known issues
+* PortAudio returns "Invalid device" if using the "Speaker (Synaptics Audio) [Loopback]" device
+
 ## Reference
 * https://k2-fsa.github.io/sherpa/onnx/install/windows.html#bit-windows-x64
 * https://github.com/k2-fsa/sherpa-onnx/tree/v1.11.2/mfc-examples
